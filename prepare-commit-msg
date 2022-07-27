@@ -1,0 +1,40 @@
+#!/usr/bin/env dotnet-script
+
+#r "nuget: System.Runtime.Loader, 4.3.0"
+
+using System.IO;
+using System.Runtime.Loader;
+
+var hooksDirectory = Path.Combine(Environment.CurrentDirectory, "gitHookAssembly");
+
+var assemblyPath = Path.Combine(hooksDirectory, "GitHook.dll");
+
+AssemblyLoadContext.Default.Resolving += (context, assemblyName) => {
+    var assemblyPath = Path.Combine(hooksDirectory, $"{assemblyName.Name}.dll");
+    if(File.Exists(assemblyPath))
+    {
+        return AssemblyLoadContext.Default.LoadFromAssemblyPath(assemblyPath);
+    }
+    return null;
+};
+
+var assembly = AssemblyLoadContext.Default.LoadFromAssemblyPath(assemblyPath);
+if(assembly == null)
+{
+    Console.WriteLine($"Can't load assembly from '{assemblyPath}'.");
+}
+
+var collectorsType = assembly.GetType("GitHook.GitHook");
+if(collectorsType == null)
+{
+    Console.WriteLine("Can't find collector's type.");
+}
+
+var method = collectorsType.GetMethod("RunPreCommitGitHook", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+if(method == null)
+{
+    Console.WriteLine("Can't find collector's method for pre-commit hooks.");
+}
+
+ method.Invoke(null, new object[] { Args });
+
