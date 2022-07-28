@@ -22,9 +22,9 @@ namespace GitHook
                 var branch = File.ReadAllText(args[0]).Replace("Merge branch", "").Replace("\'", "").Trim();
                 var tags = ExecuteRequest<List<Tags>>($"/api/issues/{branch}/tags?fields=name");
                 var issue = ExecuteRequest<Issues>($"/api/issues/{branch}?fields=summary");
-                if (tags != null && issue != null)
+                if (tags != null && issue != null && tags.Count>0)
                 {
-                    var message = DateTime.Now.ToString("dd-MM-yyyy'\'HH:mm:ss") + $" {tags[0].Name}. {issue.Summary} {branch}";
+                    var message = DateTime.Now.ToString("dd-MMM-yyyy'\'HH:mm:ss") + $" {tags[0].Name}. {issue.Summary}. {branch}";
                     File.WriteAllText(args[0], message, Encoding.UTF8);
                 }
             }
